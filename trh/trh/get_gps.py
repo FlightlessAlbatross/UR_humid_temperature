@@ -23,7 +23,7 @@ if os.path.exists(api_response_observations_geolocation):
 
 
 with open(api_response_observations_geolocation, 'a') as jsonl_file:
-    for entry in data:
+    for i, entry in enumerate(data):
         device_id = entry["@iot.id"]
 
         # Skip if this entry has already been processed
@@ -52,7 +52,12 @@ with open(api_response_observations_geolocation, 'a') as jsonl_file:
             "geometry": {"type": "Point", "coordinates": location}}
         
         jsonl_file.write(json.dumps(out) + '\n')
+        if i % 100 == 0:
+            print(f"Iteration {i}")
+
         time.sleep(1)
+
+
 
 
 
