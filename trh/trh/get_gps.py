@@ -3,6 +3,7 @@ import os
 from trh.config import api_response_observations_utrecht, api_response_observations_geolocation
 from trh import api_client
 import time
+from datetime import datetime
 
 
 # Load the input JSON data
@@ -53,7 +54,10 @@ with open(api_response_observations_geolocation, 'a') as jsonl_file:
         
         jsonl_file.write(json.dumps(out) + '\n')
         if i % 100 == 0:
-            print(f"Iteration {i}")
+            current_time = datetime.now()
+            print(
+                f"Iteration {i} at: { current_time.strftime('%H:%M') }"
+                )
 
         time.sleep(1)
 
