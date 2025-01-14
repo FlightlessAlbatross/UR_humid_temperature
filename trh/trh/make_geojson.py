@@ -1,9 +1,13 @@
+# this script takes in the API responses from the observations and from the geolocations and puts them into a single geojson points cloud. 
+
 import json
 from trh.config import api_response_observations_geolocation, trh_utrecht
 
 
+
+
 # Input and output file paths
-input_file = api_response_observations_geolocation 
+locations_file = api_response_observations_geolocation 
 output_file = trh_utrecht 
 
 # Prepare the GeoJSON structure
@@ -13,7 +17,7 @@ geojson = {
 }
 
 
-with open(input_file, "r") as file:
+with open(locations_file, "r") as file:
     for line in file:
         record = json.loads(line.strip())
         feature = {
@@ -23,10 +27,10 @@ with open(input_file, "r") as file:
                 "device_id": record["device_id"],
                 "phenomenonTime": record["phenomenonTime"],
                 "type": record["type"],
-                "value": record["value"],
+                "value": float(record["value"]) if record["value"] is not None else None,
                 "geoloc_url": record["geoloc_url"],
-                "location_quality": record["location_quality"],
-                "geometry_altitude": record["geometry_altitude"]
+                "location_quality": float(record["location_quality"]) if record["location_quality"] is not None else None,
+                "geometry_altitude": float(record["geometry_altitude"]) if record["geometry_altitude"] is not None else None
             }
         }
         geojson["features"].append(feature)
