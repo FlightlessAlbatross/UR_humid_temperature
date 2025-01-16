@@ -21,11 +21,9 @@ processed_device_ids = set()
 if os.path.exists(api_response_obs_by_sensor):
     with open(api_response_obs_by_sensor, 'r') as jsonl_file:
         for line in jsonl_file:
-            try:
-                entry = json.loads(line)
-                processed_device_ids.add(entry["device_id"])
-            except json.JSONDecodeError:
-                continue  # Handle cases where the file might have partial/corrupt lines
+            entry = json.loads(line)
+            processed_device_ids.add(entry["device_id"])
+
 
 
 
