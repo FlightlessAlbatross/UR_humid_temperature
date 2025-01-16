@@ -5,19 +5,12 @@ import json
 import os
 
 base_url = apiurl_base_url
+# TODO Move these endpoint urls to the config. 
 url = f"{base_url}/Observations?$filter=(Datastream/Thing/name eq 'Utrecht')&$orderby=@iot.id asc"
 
 output_path = api_response_observations_utrecht
 
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-# @iot.id is the unique id for the observation
-# FeatureOfInterest@iot.navigationLink points to GPS data
-
-# get the first 100 observations
-# get the GPS for these 100 observations
-# get the  next 100 while the last entry doesn't link to the next 100 observations.
-# store everything as a table
 
 
 all_observations = []
