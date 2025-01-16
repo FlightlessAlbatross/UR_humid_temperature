@@ -1,3 +1,9 @@
+# office files
+*.docx
+# temprorary office files
+~$*
+
+
 # R History files
 .Rhistory
 .Rapp.history
@@ -53,8 +59,11 @@ cache
 
 # Data folders for size
 data/*
-data_save/*
-!data/**/*.gitkeep
+==!data/**/*.gitkeep
+
+# there is some data in the plotting package, I need to movie it TODO to the rest of the data.
+*.grib
+*.RDS
 
 Rpackages
 
