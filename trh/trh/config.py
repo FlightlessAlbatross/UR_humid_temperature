@@ -27,9 +27,9 @@ def api_endpoint_obs_by_sensorname(device_id):
             
 
 ## data
-api_responses__sensors_utrecht        = data_dir / "raw/api_responses/sensors_utrecht.json"
-api_responses__obs_by_sensor_utrecht  = data_dir / "raw/api_responses/obs_by_sensor_utrecht.jsonl" 
-api_responses__observations_geolocation_utrecht      = data_dir / "raw/api_responses/observations_geolocation_utrecht.jsonl" 
+api_responses__sensors_utrecht                  = data_dir / "raw/api_responses/sensors_utrecht.json"
+api_responses__observations_by_sensor_utrecht   = data_dir / "raw/api_responses/observations_by_sensor_utrecht.jsonl" 
+api_responses__observations_geolocation_utrecht = data_dir / "raw/api_responses/observations_geolocation_utrecht.jsonl" 
 
 trh_utrecht = data_dir / "processed/trh/utrecht.geojson"
 

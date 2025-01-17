@@ -1,4 +1,4 @@
-from trh.config import api_endpoint_obs_by_sensorname, api_responses__sensors_utrecht, api_responses__obs_by_sensor_utrecht
+from trh.config import api_responses__observations_by_sensor_utrecht, api_responses__sensors_utrecht
 from trh import api_client
 
 import json
@@ -6,7 +6,7 @@ import os
 
 
 path_sensor_namelist = api_responses__sensors_utrecht
-path_output = api_responses__obs_by_sensor_utrecht
+path_output = api_responses__observations_by_sensor_utrecht
 os.makedirs(os.path.dirname(path_output), exist_ok=True)
 
 with open(path_sensor_namelist, 'r') as json_file:
