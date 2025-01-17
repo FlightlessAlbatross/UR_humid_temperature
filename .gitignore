@@ -1,8 +1,11 @@
-# office files
-*.docx
-# temprorary office files
+# temporary files
 ~$*
 
+# ms office files
+*.docx
+
+#
+*.RDS
 
 # R History files
 .Rhistory

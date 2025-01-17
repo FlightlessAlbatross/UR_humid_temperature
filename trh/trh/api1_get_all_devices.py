@@ -1,24 +1,25 @@
-from trh.config import api_response_observations_utrecht, apiurl_base_url
+from trh.config import api_responses__sensors_utrecht, api_endpoint_sensors
 from trh import api_client
 
 import json
 import os
 
-base_url = apiurl_base_url
-# TODO Move these endpoint urls to the config. 
-url = f"{base_url}/Observations?$filter=(Datastream/Thing/name eq 'Utrecht')&$orderby=@iot.id asc"
+url = api_endpoint_sensors
 
-output_path = api_response_observations_utrecht
+output_path = api_responses__sensors_utrecht
 
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 
-all_observations = []
+all_devices = []
 counter = 0
 while url:
     response_data = api_client.make_api_request(url)
+    
+    if response_data['value'] == []:
+        raise ValueError("An empty json was returned. ")
 
-    all_observations.extend(response_data.get("value", []))
+    all_devices.extend(response_data.get("value", []))
     counter += 100
     print(f"Fetched the first {counter} observations. ")
 
@@ -32,5 +33,5 @@ while url:
 
 
 with open(output_path, 'w') as json_file:
-    json.dump(all_observations, json_file, indent=4)
+    json.dump(all_devices, json_file, indent=4)
 
