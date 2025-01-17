@@ -1,26 +1,12 @@
-from trh.config import api_response_sensors_utrecht, apiurl_base_url
+from trh.config import api_responses__sensors_utrecht, api_endpoint_sensors
 from trh import api_client
 
 import json
 import os
 
-base_url = apiurl_base_url
-device_id = "8zxUAuBsVdr99AQS9gM94"
+url = api_endpoint_sensors
 
-url = f"{base_url}/Sensors?$select=name&$count=true&$filter=Datastreams/Thing/name eq 'Utrecht'"
-
-# url = (
-#     f"{base_url}/Observations?"
-#     f"$filter=startswith(Datastream/Sensor/name, '{device_id}')&"
-#     f"$count=true&"
-#     f"$orderBy=resultTime desc&"
-#     f"$expand=FeatureOfInterest($select=feature/coordinates,properties/quality)&"
-#     f"$expand=Datastream($select=unitOfMeasurement/name,unitOfMeasurement/symbol;"
-#     f"$expand=ObservedProperty($select=name))"
-# )
-
-
-output_path = api_response_sensors_utrecht
+output_path = api_responses__sensors_utrecht
 
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 

@@ -1,19 +1,18 @@
-# Merge the GPS data, with the observations. 
-# its already merged....
-# convert the one file to geojson
+# convert api_respones by device (with GPS) to a geojson
 
-from trh.config import api_response_obs_by_sensor, trh_utrecht_sensor
+from trh.config import api_responses__obs_by_sensor_utrecht, trh_utrecht
 import json
-import geopandas as gpd
 import os
 
+path_input  = api_responses__obs_by_sensor_utrecht
+path_output = trh_utrecht
 
 geojson = {
     "type": "FeatureCollection",
     "features": []
 }
 
-with open(api_response_obs_by_sensor, 'r') as jsonl_file:
+with open(path_input, 'r') as jsonl_file:
     for line in jsonl_file:
         device_data = json.loads(line)
         
@@ -50,8 +49,8 @@ with open(api_response_obs_by_sensor, 'r') as jsonl_file:
 
 
 # Write the GeoJSON to a file
-os.makedirs(os.path.dirname(trh_utrecht_sensor), exist_ok=True)
-with open(trh_utrecht_sensor, "w") as file:
+os.makedirs(os.path.dirname(path_output), exist_ok=True)
+with open(path_output, "w") as file:
     json.dump(geojson, file, indent=2)
 
-print(f"GeoJSON file created: {trh_utrecht_sensor}")
+print(f"GeoJSON file created: {path_output}")
