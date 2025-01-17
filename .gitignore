@@ -1,3 +1,9 @@
+# temporary files
+~$*
+
+# ms office files
+*.docx
+
 # R History files
 .Rhistory
 .Rapp.history
