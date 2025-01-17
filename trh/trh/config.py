@@ -31,8 +31,8 @@ api_responses__sensors_utrecht                  = data_dir / "raw/api_responses/
 api_responses__observations_by_sensor_utrecht   = data_dir / "raw/api_responses/observations_by_sensor_utrecht.jsonl" 
 api_responses__observations_geolocation_utrecht = data_dir / "raw/api_responses/observations_geolocation_utrecht.jsonl" 
 
-trh_utrecht = data_dir / "processed/trh/utrecht_global.geojson"
-
+trh_utrecht_global = data_dir / "processed/trh/utrecht_global.geojson"
+trh_utrecht = data_dir / "processed/trh/utrecht.geojson"
 
 # Utrecht polygon
 LAU_utrecht = data_dir / "reference/LAU_utrecht_4326.geojson" # needs to be in the data folder from the start.

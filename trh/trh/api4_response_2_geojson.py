@@ -1,11 +1,11 @@
 # convert api_respones by device (with GPS) to a geojson
 
-from trh.config import api_responses__obs_by_sensor_utrecht, trh_utrecht
+from trh.config import api_responses__obs_by_sensor_utrecht, trh_utrecht_global
 import json
 import os
 
 path_input  = api_responses__obs_by_sensor_utrecht
-path_output = trh_utrecht
+path_output = trh_utrecht_global
 
 geojson = {
     "type": "FeatureCollection",

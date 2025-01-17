@@ -6,13 +6,20 @@ library(ggplot2)
 
 # setwd("C:/Users/hofer/Documents/urbanreleaf/UR_humid_temperature/trh/trh_plotting")
 # Path to the reference data (as .rds)
-reference_data_path <- "./data/utrecht_reference.RDS"
-
+reference_data_path <- "./trh/trh_plotting/data/utrecht_reference.RDS"
 
 # Define a function to load reference data selectively
 load_reference_data <- function(start_time, end_time) {
+
   all_reference_data <- readRDS(reference_data_path)
-  filtered_reference_data <- all_reference_data[all_reference_data$time >= start_time & all_reference_data$time <= end_time, ]
+  filtered_reference_data <- 
+    all_reference_data[all_reference_data$time >= start_time &
+                       all_reference_data$time <= end_time, ]
+
+
+  if (nrow(filtered_reference_data) < 3){
+    return(load_reference_data(start_time - 2*3600, end_time + 2*3600))
+  }
   return(filtered_reference_data)
 }
 
@@ -30,16 +37,12 @@ plot_temperature <- function(temp_data) {
   
   # Load the necessary reference data
   reference_data <- load_reference_data(time_min, time_max)
-  
-  # Filter temp_data to only include the time span of reference_data
-  filtered_temp_data <- temp_data[temp_data$time >= min(reference_data$time) & temp_data$time <= max(reference_data$time), ]
-  
+   
   # Create the ggplot
   p <- ggplot() +
     geom_line(data = reference_data, aes(x = time, y = temperature), color = "gray", alpha = 0.5, lwd = 1) +
-    geom_point(data = filtered_temp_data, aes(x = time, y = temperature), color = "blue", size = 2, shape = 1) +
-    labs(title = "Temperature Plot with Reference Data",
-         x = "Time",
+    geom_point(data = temp_data, aes(x = time, y = temperature), color = "blue", size = 2, shape = 1) +
+    labs(x = "Time",
          y = "Temperature") +
     theme_minimal()
   
