@@ -4,6 +4,9 @@
 # ms office files
 *.docx
 
+#
+*.RDS
+
 # R History files
 .Rhistory
 .Rapp.history
