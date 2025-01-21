@@ -9,13 +9,8 @@ utrecht <- st_read(polygon_path)
 
 data <- st_read(data_path)
 
-print(quantile(table(data$device_id), (1:10)/10 ))
-
-# which device has more than 20k observations. 
-table(data$device_id)[which(table(data$device_id) > 20000)]
-
-
 utrecht_points <- st_intersection(data, utrecht)
 utrecht_points$id <- NULL
 
+dir.create(dirname(output_path), showWarnings = FALSE)
 st_write(utrecht_points, output_path)
