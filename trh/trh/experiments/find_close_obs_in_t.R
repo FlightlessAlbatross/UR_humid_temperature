@@ -1,19 +1,23 @@
 library(sf)
 library(data.table)
 source("./trh/trh_plotting/plot_points_static.R")
-
 trh_utrecht <-  "./data/cleaned/trh/utrecht.geojson"
 
 observations <- data.table(st_read(trh_utrecht))
 observations <- observations[observations$phenomenonTime < "2024-10-01 00:00:00 CET" & 
                              observations$phenomenonTime > "2024-06-30 23:59:59 CET" ]
-hist(observations$phenomenonTime, breaks = 'weeks')
+# hist(observations$phenomenonTime, breaks = 'weeks')
 
 
 
 
-observations[ , obs_per_minute := .N  , .(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
-observations[ , instance := .GRP , .(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
+observations[ , obs_per_minute := .N,
+             .(device_id, type, year(phenomenonTime),
+               yday(phenomenonTime),
+               hour(phenomenonTime),
+               minute(phenomenonTime))]
+observations[ , instance := .GRP,
+.(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
 
 high_temporal_frequency <- observations[obs_per_minute > 60]
 dim(high_temporal_frequency)
@@ -44,7 +48,12 @@ st_write(testcase, './data/temp/bigarea_in_second_high_gps_accuracy.geojson', ov
 testcases_instances <- averaged[averaged$max_distance > 4000]$instance
 
 testcases <- observations[instance %in% testcases_instances]
-testcases[ ,plot_points_static(.SD, output_file = paste0("./data/temp/", device_id[1], "_", instance[1],".png")) , .(instance)]
+
+static_map_filename <- function(dt){
+     return (paste0("./data/temp/space_time_instance", dt$instance[1], "_", dt$device_id[1],".png"))
+}
+
+testcases[ ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , .(instance)]
 
 View(testcases)
 
