@@ -4,6 +4,12 @@ library(ggspatial)
 library(viridis)
 library(dplyr)
 
+# Needs buffer around the points to get orientated
+# the time needs to be formatted. 
+
+# map in map, to see where in utrecht one is would be a neat feature for the future. 
+
+
 # Define the function
 plot_points_static <- function(sf_object, color_column = "phenomenonTime", output_file = NULL) {
   # Ensure the color column exists in the sf object
