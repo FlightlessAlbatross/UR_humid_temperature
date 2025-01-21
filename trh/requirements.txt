@@ -1,0 +1,6 @@
+#R
+ggspatial
+ggplot2
+data.table
+viridis
+dplyr
