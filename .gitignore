@@ -4,6 +4,9 @@
 # ms office files
 *.docx
 
+# osm cache data from plotting
+rosm.cache/*
+
 #
 *.RDS
 
