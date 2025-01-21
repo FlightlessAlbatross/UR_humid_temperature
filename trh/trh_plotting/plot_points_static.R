@@ -7,8 +7,6 @@ library(dplyr)
 library(lubridate)
 
 # Needs buffer around the points to get orientated
-# the time needs to be formatted. 
-
 # map in map, to see where in utrecht one is would be a neat feature for the future.
 
 
