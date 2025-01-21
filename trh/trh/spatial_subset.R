@@ -13,4 +13,4 @@ utrecht_points <- st_intersection(data, utrecht)
 utrecht_points$id <- NULL
 
 dir.create(dirname(output_path), showWarnings = FALSE)
-st_write(utrecht_points, output_path)
+st_write(utrecht_points, output_path, delete_dsn = TRUE)
