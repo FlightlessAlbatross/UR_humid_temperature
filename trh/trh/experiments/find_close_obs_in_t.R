@@ -42,6 +42,7 @@ averaged <- averaged[order(device_id, time), , ]
 
 
 testcase <- observations[observations$instance == 441,]
+
 plot_points_static(testcase)
 st_write(testcase, './data/temp/bigarea_in_second_high_gps_accuracy.geojson', overwrite = T)
 
@@ -49,11 +50,26 @@ testcases_instances <- averaged[averaged$max_distance > 4000]$instance
 
 testcases <- observations[instance %in% testcases_instances]
 
+testcase2 <- testcases[instance == 383]
+testcase3 <- testcases[instance == 389]
+
+
+
 static_map_filename <- function(dt){
-     return (paste0("./data/temp/space_time_instance", dt$instance[1], "_", dt$device_id[1],".png"))
+     instance_value <- dt$instance[1]
+     device_id <- dt$device_id[1]
+
+     return (paste0("./data/temp/space_time_instance", instance_value, "_", device_id,".png"))
 }
 
-testcases[ ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , .(instance)]
+testcase[ ,  .(output_file = static_map_filename(.SD) ), by = .(instance), .SDcols = names(testcases)]
+
+testcase[ ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , by = .(instance), .SDcols = names(testcases)]
+
+
+
+
+testcases[type == "temperature" ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , by = .(instance), .SDcols = names(testcases)]
 
 View(testcases)
 
