@@ -1,10 +1,15 @@
 library(sf)
 library(data.table)
+source("./trh/trh_plotting/plot_points_static.R")
 
 trh_utrecht <-  "./data/cleaned/trh/utrecht.geojson"
 
 observations <- data.table(st_read(trh_utrecht))
-observations
+observations <- observations[observations$phenomenonTime < "2024-10-01 00:00:00 CET" & 
+                             observations$phenomenonTime > "2024-06-30 23:59:59 CET" ]
+hist(observations$phenomenonTime, breaks = 'weeks')
+
+
 
 
 observations[ , obs_per_minute := .N  , .(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
@@ -12,11 +17,11 @@ observations[ , instance := .GRP , .(device_id, type, year(phenomenonTime), yday
 
 high_temporal_frequency <- observations[obs_per_minute > 60]
 dim(high_temporal_frequency)
-# View(testcase)
+
 
 # if we were to group them all how many observations are left?
 library(sf)
-
+library(lubridate)
 averaged <- observations[ , .(
   obs_per_minute = .N,
   avg_value = mean(value),
@@ -24,17 +29,24 @@ averaged <- observations[ , .(
   max_distance = max(as.vector(st_distance(geometry))), 
   gps_max_quality = max(gps_quality), 
   gps_med_quality = median(gps_quality)
-), by = .(device_id, instance, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
+), by = .(device_id, instance, type, year(phenomenonTime), yday(phenomenonTime), month(phenomenonTime), day(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
 
-View(averaged)
-averaged <- averaged[order(device_id, yday, hour, minute), , ]
+averaged[ , time := ISOdatetime(year = year, month = month, day = day, hour = hour, min = minute, sec = 0) , ]
+averaged <- averaged[order(device_id, time), , ]
 
 # this device had large spatial distances in one second!
-# testcase <- observations[observations$instance == 441,]
-# st_write(testcase, './data/temp/bigarea_in_second.geojson')
+
+
 testcase <- observations[observations$instance == 441,]
+plot_points_static(testcase)
 st_write(testcase, './data/temp/bigarea_in_second_high_gps_accuracy.geojson', overwrite = T)
 
+testcases_instances <- averaged[averaged$max_distance > 4000]$instance
+
+testcases <- observations[instance %in% testcases_instances]
+testcases[ ,plot_points_static(.SD, output_file = paste0("./data/temp/", device_id[1], "_", instance[1],".png")) , .(instance)]
+
+View(testcases)
 
 
 # are some devices more prone to oversharing?
