@@ -1,7 +1,7 @@
 library(sf)
 
 
-data_path <- "./data/processed/trh/utrecht.geojson"
+data_path <- "./data/processed/trh/utrecht_global.geojson"
 output_path <- "./data/cleaned/trh/utrecht.geojson"
 polygon_path = "./data/reference/LAU_utrecht_4326.geojson"
 
