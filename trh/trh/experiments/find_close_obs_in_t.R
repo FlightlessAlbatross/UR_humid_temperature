@@ -8,7 +8,12 @@ observations <- observations[observations$phenomenonTime < "2024-10-01 00:00:00 
                              observations$phenomenonTime > "2024-06-30 23:59:59 CET" ]
 # hist(observations$phenomenonTime, breaks = 'weeks')
 
+deletable <- function(){
+     device_id <- "007c01fe-3f03-4be6-863d-b052982d2e4a"
+     iot_id    <- "d28b0f7c-4f2b-11ef-9c4c-4bb2988901c5"
 
+     observations[device_id == device_id & X.iot.id == iot_id, ]
+}
 
 
 observations[ , obs_per_minute := .N,
@@ -100,3 +105,6 @@ st_write(testcase, './data/temp/testcase_onesecond.geojson')
 # define a trip. A string of observations with no larger gap than? 10 minutes?
 
 averaged[type == 'temperature', , .(device_id, type, yday, hour minute)]
+
+
+
