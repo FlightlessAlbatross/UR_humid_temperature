@@ -1,19 +1,28 @@
 library(sf)
 library(data.table)
 source("./trh/trh_plotting/plot_points_static.R")
-
 trh_utrecht <-  "./data/cleaned/trh/utrecht.geojson"
 
 observations <- data.table(st_read(trh_utrecht))
 observations <- observations[observations$phenomenonTime < "2024-10-01 00:00:00 CET" & 
                              observations$phenomenonTime > "2024-06-30 23:59:59 CET" ]
-hist(observations$phenomenonTime, breaks = 'weeks')
+# hist(observations$phenomenonTime, breaks = 'weeks')
+
+deletable <- function(){
+     device_id <- "007c01fe-3f03-4be6-863d-b052982d2e4a"
+     iot_id    <- "d28b0f7c-4f2b-11ef-9c4c-4bb2988901c5"
+
+     observations[device_id == device_id & X.iot.id == iot_id, ]
+}
 
 
-
-
-observations[ , obs_per_minute := .N  , .(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
-observations[ , instance := .GRP , .(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
+observations[ , obs_per_minute := .N,
+             .(device_id, type, year(phenomenonTime),
+               yday(phenomenonTime),
+               hour(phenomenonTime),
+               minute(phenomenonTime))]
+observations[ , instance := .GRP,
+.(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
 
 high_temporal_frequency <- observations[obs_per_minute > 60]
 dim(high_temporal_frequency)
@@ -38,13 +47,34 @@ averaged <- averaged[order(device_id, time), , ]
 
 
 testcase <- observations[observations$instance == 441,]
+
 plot_points_static(testcase)
 st_write(testcase, './data/temp/bigarea_in_second_high_gps_accuracy.geojson', overwrite = T)
 
 testcases_instances <- averaged[averaged$max_distance > 4000]$instance
 
 testcases <- observations[instance %in% testcases_instances]
-testcases[ ,plot_points_static(.SD, output_file = paste0("./data/temp/", device_id[1], "_", instance[1],".png")) , .(instance)]
+
+testcase2 <- testcases[instance == 383]
+testcase3 <- testcases[instance == 389]
+
+
+
+static_map_filename <- function(dt){
+     instance_value <- dt$instance[1]
+     device_id <- dt$device_id[1]
+
+     return (paste0("./data/temp/space_time_instance", instance_value, "_", device_id,".png"))
+}
+
+testcase[ ,  .(output_file = static_map_filename(.SD) ), by = .(instance), .SDcols = names(testcases)]
+
+testcase[ ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , by = .(instance), .SDcols = names(testcases)]
+
+
+
+
+testcases[type == "temperature" ,plot_points_static(.SD, output_file = static_map_filename(.SD)) , by = .(instance), .SDcols = names(testcases)]
 
 View(testcases)
 
@@ -75,3 +105,6 @@ st_write(testcase, './data/temp/testcase_onesecond.geojson')
 # define a trip. A string of observations with no larger gap than? 10 minutes?
 
 averaged[type == 'temperature', , .(device_id, type, yday, hour minute)]
+
+
+
