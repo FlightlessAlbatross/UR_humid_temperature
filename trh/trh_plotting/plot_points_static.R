@@ -81,20 +81,16 @@ plot_points_static <- function(sf_object, color_column = "phenomenonTime", outpu
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
     message("Map saved to: ", output_file)
+    return (1)
+  }  else {
+    print(map)
+    return (1)
   }
   
-  return(output_file)
+  
 }
 
 # Example usage
 # sf_data <- st_read("your_geojson_file.geojson")
 # map <- plot_points_static(sf_data, color_column = "phenomenonTime", output_file = "static_map.png")
 # print(map)
-
-
-sf_object <- testcase2
-
-plot_points_static(testcase3, color_column = "phenomenonTime",
-  output_file = static_map_filename(testcase3)
-)
-
