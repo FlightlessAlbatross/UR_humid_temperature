@@ -1,4 +1,4 @@
-from trh.config import api_responses__observations_by_sensor_utrecht, api_responses__sensors_utrecht
+from trh.config import api_responses__observations_by_sensor_utrecht, api_responses__sensors_utrecht, api_endpoint_obs_by_sensorname
 from trh import api_client
 
 import json
