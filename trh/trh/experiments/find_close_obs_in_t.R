@@ -6,23 +6,16 @@ trh_utrecht <-  "./data/cleaned/trh/utrecht.geojson"
 observations <- data.table(st_read(trh_utrecht))
 observations <- observations[observations$phenomenonTime < "2024-10-01 00:00:00 CET" & 
                              observations$phenomenonTime > "2024-06-30 23:59:59 CET" ]
-# hist(observations$phenomenonTime, breaks = 'weeks')
-
-deletable <- function(){
-     device_id <- "007c01fe-3f03-4be6-863d-b052982d2e4a"
-     iot_id    <- "d28b0f7c-4f2b-11ef-9c4c-4bb2988901c5"
-
-     observations[device_id == device_id & X.iot.id == iot_id, ]
-}
+# hist(observations$resultTime, breaks = 'weeks')
 
 
 observations[ , obs_per_minute := .N,
-             .(device_id, type, year(phenomenonTime),
-               yday(phenomenonTime),
-               hour(phenomenonTime),
-               minute(phenomenonTime))]
+             .(device_id, type, year(resultTime),
+               yday(resultTime),
+               hour(resultTime),
+               minute(resultTime))]
 observations[ , instance := .GRP,
-.(device_id, type, year(phenomenonTime), yday(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
+.(device_id, type, year(resultTime), yday(resultTime), hour(resultTime), minute(resultTime))]
 
 high_temporal_frequency <- observations[obs_per_minute > 60]
 dim(high_temporal_frequency)
@@ -38,7 +31,7 @@ averaged <- observations[ , .(
   max_distance = max(as.vector(st_distance(geometry))), 
   gps_max_quality = max(gps_quality), 
   gps_med_quality = median(gps_quality)
-), by = .(device_id, instance, type, year(phenomenonTime), yday(phenomenonTime), month(phenomenonTime), day(phenomenonTime), hour(phenomenonTime), minute(phenomenonTime))]
+), by = .(device_id, instance, type, year(resultTime), yday(resultTime), month(resultTime), day(resultTime), hour(resultTime), minute(resultTime))]
 
 averaged[ , time := ISOdatetime(year = year, month = month, day = day, hour = hour, min = minute, sec = 0) , ]
 averaged <- averaged[order(device_id, time), , ]
