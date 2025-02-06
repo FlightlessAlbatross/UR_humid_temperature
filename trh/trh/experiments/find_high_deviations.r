@@ -1,46 +1,81 @@
 library(sf)
 library(data.table)
 library(lubridate)
+
+# Load functions
 source("./trh/trh_plotting/plot_points_static.R")
 source("./trh/trh_plotting/plot_temperature.R")
+source("./trh/trh/fun__make_trips.r")
 
-
-trh_utrecht <-  "./data/cleaned/trh/utrecht.geojson"
-
+# Load observations
+trh_utrecht <- "./data/cleaned/trh/utrecht_trips.geojson"
 observations <- data.table(st_read(trh_utrecht))
 
-observations <- observations[observations$resultTime < "2024-10-01 00:00:00 CET" & 
-                             observations$resultTime > "2024-06-30 23:59:59 CET" ]
 
-observations <- observations[order(resultTime)]
-
-observations <- observations [ , resultTime_diff     := c(NA, make_difftime(diff(resultTime), units = "seconds")), .(type, device_id)]
-# observations <- observations [ , phenomenonTime_diff :=  c(NA, diff(phenomenonTime)), .(type, device_id)]
+# add the trips
+observations <- add_trips(observations)
 
 
-testcase <- observations[type == 'temperature' & device_id == '88901ccb-88c0-435a-af7f-fb37fc890bcb']
-threshold <- 15 * 60
-
-testcase[, trip_id = cumsum(is.na(resultTime_diff) | resultTime_diff > threshold), .(type, device_id)]
-
-observations[, trip_id := .GRP * 100000 + cumsum(is.na(resultTime_diff) | resultTime_diff > threshold), by = .(type, device_id)]
-
-observations[, trip_number_obs := .N , .(trip_id, type)]
-
-observations[, trip_duration := diff(range(resultTime)), .(trip_id, type)]
-
-plot_points_static(observations[trip_id == 100001])
+library(mgcv)
+temperature <- observations[type == 'temperature']
+ggplot(temperature, aes(x = as.ITime(time), y = value_delta)) +
+  geom_point(alpha = 0.1) + 
+  scale_x_continuous(name = '', breaks = seq(0, 86400, by = 21600),
+   labels = function(x) strftime(as.POSIXct(x, origin = "1970-01-01", tz = "UTC"), format = "%H:%M:%S")) + 
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cc"), se = FALSE) +
+  theme_minimal()
+hist(temperature$value_delta)
 
 
 
-plot_temperature(observations[trip_id == 100001, .(time = resultTime,temperature = value)])
 
-temperature <- observations[type == 'temperature',.(time = resultTime,temperature = value) , .(trip_id, device_id)]
+ggplot(temperature, aes(x = as.ITime(time), y = value_delta)) +
+  geom_point(alpha = 0.1) + 
+  geom_path(aes(group = trip_id), alpha = 0.1) + 
+  scale_x_continuous(name = '', breaks = seq(0, 86400, by = 10800),
+   labels = function(x) strftime(as.POSIXct(x, origin = "1970-01-01", tz = "UTC"), format = "%H:%M:%S")) + 
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cc"), se = FALSE) +
+  theme_minimal()
 
-for (grp in unique(temperature$trip_id)){
+# find the interesting trip at night where the temperature goes up a lot
+special <- temperature[value_delta > 18 & hour(time) >= 22] 
+plot(special$value)
 
-    image_path <- paste0("./plots/temperature_", grp,".png")
-    p_temp <- plot_temperature  (temperature[trip_id == grp])
-    ggsave("plot.png", plot = p_temp, device = png, type = "cairo", dpi = 300)
+special <-temperature[trip_id == names(table(special$trip_id))[1]]
+ggplot(special , aes(x = as.ITime(time), y = value_delta)) +
+  geom_point() + 
+  geom_path(aes(group = trip_id), alpha = 0.1) + 
+  scale_x_continuous(name = '', breaks = seq(0, 86400, by = 10800),
+   labels = function(x) strftime(as.POSIXct(x, origin = "1970-01-01", tz = "UTC"), format = "%H:%M:%S")) + 
+  geom_smooth() +
+  theme_minimal()
 
-}
+ggplot() +
+    annotation_map_tile(type = "osm", zoom = 15) +  # Add OSM tiles as background
+    geom_sf(data = st_as_sf(special), aes(color = time, shape = value >= 30 ), size = 5) +  # Add points
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.ticks = element_blank(),
+      legend.position = "right",
+      panel.grid = element_blank()
+      ) +
+    labs( )
+
+# or maybe find trips with high temp differentials in general. 
+
+
+hot_spots <- temperature[value_delta > 15]
+
+table(hot_spots$device_id)
+
+
+cold_spots <- temperature[value_delta < 0]
+table(cold_spots$value_delta)
+
+range(hot_spots$resultTime)
+
+dim(hot_spots)
+dim(cold_spots)
+
+plot_points_static(hot_spots, color_column = 'time')
+plot_points_static(cold_spots, color_column = 'time')
