@@ -42,6 +42,8 @@ plot_temperature <- function(temp_data) {
   p <- ggplot() +
     geom_line(data = reference_data, aes(x = time, y = temperature), color = "gray", alpha = 0.5, lwd = 1) +
     geom_point(data = temp_data, aes(x = time, y = temperature), color = "blue", size = 2, shape = 1) +
+    geom_line (data = temp_data, aes(x = time, y = temperature), color = "blue", si) +
+
     labs(x = "Time",
          y = "Temperature") +
     theme_minimal()
