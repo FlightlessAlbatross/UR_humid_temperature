@@ -5,6 +5,10 @@ library(lubridate)
 
 # Load reference temperature data
 reference_data_path <- "./trh/trh_plotting/data/utrecht_reference.RDS"
+temperature_path <- "./data/cleaned/trh/utrecht_temperature.geojson"
+humid_path       <- "./data/cleaned/trh/utrecht_humidity.geojson"
+all_path         <- "./data/cleaned/trh/utrecht_observations.geojson"
+
 
 all_reference_data <- data.table(readRDS(reference_data_path))
 
@@ -20,7 +24,7 @@ all_reference_data <- melt.data.table(all_reference_data, id.vars = "time",
 trh_utrecht <- "./data/cleaned/trh/utrecht.geojson"
 observations <- data.table(st_read(trh_utrecht))
 
-output_path <- "./data/cleaned/trh/utrecht_trips.geojson"
+
 
 # Filter date range
 observations <- observations[resultTime < as.POSIXct("2024-10-01 00:00:00", tz = "CET") & 
@@ -35,12 +39,16 @@ setkey(all_reference_data, type, time)
 
 # Merge using rolling join to get the nearest reference temperature
 observations <- all_reference_data[observations, roll = "nearest", on = c("type" = "type", "time" = "resultTime" )]
-data[is.na(type)]$type <- 'thermal_stress'
+observations[is.na(type)]$type <- 'thermal_stress'
 
 observations[ , value_delta := value - value_reference, ]
 
-output <- st_as_sf(observations[,.(X.iot.id, device_id, type, time, value, value_reference, geometry)])
-st_write(output, dsn = output_path, delete_dsn = TRUE)
+output <- st_as_sf(observations[,.(X.iot.id, device_id, type, time, value, value_reference, gps_quality, geometry)])
+
+
+st_write(output[output$type == 'temperature',]      , dsn = temperature_path, delete_dsn = TRUE)
+st_write(output[output$type == 'relative_humidity',], dsn = humid_path, delete_dsn = TRUE)
+st_write(output                                     , dsn = all_path, delete_dsn = TRUE)
 
 
 
