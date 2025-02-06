@@ -1,6 +1,10 @@
 # temporary files
 ~$*
 
+
+# plots
+plots/*
+
 # ms office files
 *.docx
 
