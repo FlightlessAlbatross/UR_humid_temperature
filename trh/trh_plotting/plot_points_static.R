@@ -9,6 +9,21 @@ library(lubridate)
 # Needs buffer around the points to get orientated
 # map in map, to see where in utrecht one is would be a neat feature for the future.
 
+get_color_scale <- function(data, column) {
+  if (inherits(data[[column]], "POSIXt")) {
+    return(scale_color_datetime(
+      labels = scales::date_format("%b-%d %H:%M"),
+      low = viridis(1, option = "D"),
+      high = viridis(1, option = "D", direction = -1)
+    ))
+  } else if (is.numeric(data[[column]])) {
+    return(scale_color_gradient(
+      low = "blue", high = "red"  # Choose any two colors that fit your needs
+    ))
+  } else {
+    stop("Color column must be either a datetime or numeric type.")
+  }
+}
 
 adjust_bbox_to_aspect_ratio <- function(bbox, aspect_ratio = 16/9){
   width <- bbox['xmax'] - bbox['xmin']
@@ -30,112 +45,65 @@ adjust_bbox_to_aspect_ratio <- function(bbox, aspect_ratio = 16/9){
   }
   return (bbox)
 }
-
-# Define the function
 plot_points_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
-  # Ensure the color column exists in the sf object
-  if (!color_column %in% colnames(sf_object)) {
-    stop("Specified color column not found in the sf object.")
-  }
-
-# cast to sf object if needed
-  if (!'sf' %in% class(sf_object)){
-    sf_object <- st_as_sf(sf_object)
-  }
-
+  if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
+  
+  if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
   bbox <- st_bbox(sf_object$geometry)
-
   bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
-
-#   zoom_level <- ifelse(
-#     diff(range(bbox[c("xmin", "xmax")])) > 10 || diff(range(bbox[c("ymin", "ymax")])) > 10,
-#     4,  # Low zoom for large areas
-#     12  # High zoom for smaller areas
-#   )
   
-  # Create the static map
+  color_scale <- get_color_scale(sf_object, color_column)
+  
   map <- ggplot() +
-    annotation_map_tile(type = "osm", zoom = 15) +  # Add OSM tiles as background
-    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +  # Add points
-    scale_color_datetime( 
-      labels = scales::date_format("%b-%d %H:%M"),
-      low = viridis(1, option = "D"),  # Start of the viridis palette
-      high = viridis(1, option = "D", direction = -1) ) + 
+    annotation_map_tile(type = "osm", zoom = 15) +
+    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +
+    color_scale +
     theme_minimal() +
-    theme(axis.title = element_blank(),
-          axis.ticks = element_blank(),
-      legend.position = "right",
-      panel.grid = element_blank()
-      ) +
-    labs( )
-  
-  # Save or display the map
+    theme(axis.title = element_blank(), axis.ticks = element_blank(),
+          legend.position = "right", panel.grid = element_blank())
+
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
     message("Map saved to: ", output_file)
-    return (0)
-  }   else {
+  } else {
     print(map)
   }
+}
 
-  }
-
+# Plot paths
 plot_path_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
-  # Ensure the color column exists in the sf object
-  if (!color_column %in% colnames(sf_object)) {
-    stop("Specified color column not found in the sf object.")
-  }
-
-# cast to sf object if needed
-  if (!'sf' %in% class(sf_object)){
-    sf_object <- st_as_sf(sf_object)
-  }
-
+  if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
+  
+  if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
   bbox <- st_bbox(sf_object$geometry)
-
   bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
 
-#   zoom_level <- ifelse(
-#     diff(range(bbox[c("xmin", "xmax")])) > 10 || diff(range(bbox[c("ymin", "ymax")])) > 10,
-#     4,  # Low zoom for large areas
-#     12  # High zoom for smaller areas
-#   )
-  
-  # Create the static map
-  map <- ggplot() +
-    annotation_map_tile(type = "osm", zoom = 15) +  # Add OSM tiles as background
-    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +  # Add points
-    geom_path(
-      data = sf_object, 
-      aes(x = st_coordinates(geometry)[, 1], 
-          y = st_coordinates(geometry)[, 2],
-          color = !!sym(color_column)), 
-      inherit.aes = FALSE, 
-      lwd = 1.5
-      ) + 
-    scale_color_datetime( 
-      labels = scales::date_format("%b-%d %H:%M"),
-      low = viridis(1, option = "D"),  # Start of the viridis palette
-      high = viridis(1, option = "D", direction = -1) ) + 
-    theme_minimal() +
-    theme(axis.title = element_blank(),
-          axis.ticks = element_blank(),
-      legend.position = "right",
-      panel.grid = element_blank()
-      ) +
-    labs( )
-  
-  # Save or display the map
+  color_scale <- get_color_scale(sf_object, color_column)
+
+  # convert to data frame for geom_path and take the lead of the color, to color in the correct segment. 
+  sf_object <- sf_object %>%
+  mutate(lead_color = lead(!!sym(color_column)))  # Apply lead() within sf
+
+map <- ggplot() +
+  annotation_map_tile(type = "osm", zoom = 15) +
+  geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +
+  geom_path(
+    data = sf_object, 
+    aes(x = st_coordinates(geometry)[, 1], 
+        y = st_coordinates(geometry)[, 2],
+        color = lead_color),  # Now uses precomputed lead()
+    inherit.aes = FALSE, 
+    lwd = 1.5
+  ) +
+  color_scale +
+  theme_minimal()
+
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
     message("Map saved to: ", output_file)
-    return (0)
-  }   else {
+  } else {
     print(map)
   }
-
-  }
-# Example usage
-# sf_data <- st_read("your_geojson_file.geojson")
-# map <- plot_points_static(sf_data, color_column = "phenomenonTime", output_file = "static_map.png")
-# print(map)
+}
