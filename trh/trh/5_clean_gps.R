@@ -9,7 +9,7 @@ data <- st_read(data_path)
 coords <- data.frame(st_coordinates(data$geometry))
 # check which coordinates are outside of the WGS ranges.
 faulty_gps_idx <- which(coords$X > 180 | coords$X < -180 |
-                        coords$Y > 90 | coords$Y < -90)
+                          coords$Y > 90 | coords$Y < -90)
 
 
 #check the faulty entries:
@@ -17,6 +17,10 @@ table(data[faulty_gps_idx,]$device_id)
 
 data <- data[-faulty_gps_idx, ]
 coords <- data.frame(st_coordinates(data$geometry))
+
+
+# this specific device has a lot of faulty entries, so we remove it.
+data <- data[data$device_id != '88901ccb-88c0-435a-af7f-fb37fc890bcb',]
 
 dir.create(dirname(output_path), showWarnings = FALSE)
 st_write(data, output_path)
