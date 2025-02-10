@@ -10,6 +10,7 @@ plots/*
 
 # osm cache data from plotting
 rosm.cache/*
+markdown/rosm.cache/*
 
 #
 *.RDS
