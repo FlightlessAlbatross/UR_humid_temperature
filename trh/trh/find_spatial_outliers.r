@@ -11,8 +11,9 @@ source("./trh/trh/fun__make_trips.r")
 
 # Load observations
 trh_utrecht <- "./data/cleaned/trh/utrecht_temperature.geojson"
-observations <- (st_read(trh_utrecht))
-observations <- st_transform(observations, 'EPSG:3035')
+observations_raw <- (st_read(trh_utrecht))
+
+observations <- st_transform(observations_raw, 'EPSG:3035')
 
 
 setDT(observations)
@@ -36,7 +37,7 @@ observations$lead <- NULL
 
 setDT(observations)
 
-#shif all the difference based values, such that they measure the distance to the previous obs. 
+#shift all the difference based values, such that they measure the distance to the previous obs. 
 # this identifies the rows with faulty observations better. 
 observations[, c("time_diff", "dist") := lapply(.SD, shift, type = "lag"), .SDcols = c("time_diff", "dist")]
 observations[.N, c("time_diff", "dist") := NA]
@@ -44,31 +45,32 @@ observations[.N, c("time_diff", "dist") := NA]
 
 observations[, speed := 3.6 *  as.numeric(dist) / as.numeric(time_diff)]
 
+st_write(st_as_sf(observations), './data/cleaned/trh/temperature_GPS_speed.geojson')
 
-
-quantile(observations$speed[is.finite(observations$speed)], 
-    probs = c(0.8, 0.85, 0.9, 0.99))
 
 outlier_threshold_speed <- 50
 observations[ , trip_with_outlier := any(speed > outlier_threshold_speed, na.rm = T) , .(trip_id)]
 
 has_outlier <- observations[trip_with_outlier == TRUE]
+has_no_outlier <- observations[trip_with_outlier == FALSE]
+
+
 length(unique(has_outlier$trip_id))
 length(unique(has_outlier$device_id))
 observations$trip_with_outlier <- NULL
 
-# even speed outliers indicate 
 trips_with_outlier <- has_outlier[ , .( speed_bumps =  sum(speed > outlier_threshold_speed, na.rm = T)) , .(trip_id, device_id)]
-View(trips_with_outlier)
-table(trips_with_outlier$device_id)
 
+
+plot_points_static(observations[trip_id == 300014], color_column = 'speed')
 
 
 # the only 3 trips with outliers that aren't from 88901ccb-88c0-435a-af7f-fb37fc890bcb
- 
 plot_path_static(observations[trip_id == 3800023], color_column = 'speed')
 plot_path_static(observations[trip_id == 2400001], color_column = 'speed')
 plot_path_static(observations[trip_id == 1300027], color_column = 'speed')
+
+
 
 
 # this trip has a lot goin gon observations[trip_id == 300024]
@@ -78,3 +80,11 @@ testcase$device_id
 
 
 super_bad <- observations[device_id == '88901ccb-88c0-435a-af7f-fb37fc890bcb']
+
+
+
+# lets plot some nice trips
+has_no_outlier[ , .N , .(trip_id)][order(N, decreasing = T)][1:20]
+
+plot_path_static(observations[trip_id == 6000009], color_column = 'value')
+
