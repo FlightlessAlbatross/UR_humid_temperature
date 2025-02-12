@@ -42,7 +42,7 @@ plot_temperature <- function(temp_data) {
   p <- ggplot() +
     geom_line(data = reference_data, aes(x = time, y = temperature), color = "gray", alpha = 0.5, lwd = 1) +
     geom_point(data = temp_data, aes(x = time, y = temperature), color = "blue", size = 2, shape = 1) +
-    geom_line (data = temp_data, aes(x = time, y = temperature), color = "blue", si) +
+    geom_line (data = temp_data, aes(x = time, y = temperature), color = "blue") +
 
     labs(x = "Time",
          y = "Temperature") +
@@ -52,35 +52,35 @@ plot_temperature <- function(temp_data) {
 
 }
 
-# Wrapper for command-line usage
-plot_temperature_cli <- function(args) {
-  if (length(args) < 1) {
-    stop("Usage: Rscript script_name.R <temp_data.csv> [output_path]")
-  }
-  
-  # Read the arguments
-  temp_data_path <- args[1]
-  output_path <- ifelse(length(args) > 1, args[2],  gsub("\\.csv$", ".png", temp_data_path))
-  
-  # Check the file extension and set default if missing
-  if (tools::file_ext(output_path) == "") {
-    output_path <- paste0(output_path, ".png")
-  }
-  
-  # Load the data
-  temp_data <- read.csv(temp_data_path)
-  
-  # Ensure time is in the correct format (as.POSIXct or numeric)
-  temp_data$time <- as.POSIXct(temp_data$time, format = "%Y-%m-%d %H:%M:%S")
-  
-  # Call the plot function
-  p <- plot_temperature(temp_data)
-  
-  ggsave(output_path, p, width = 8, height = 6, device = "png")
-}
-
-# Allow the script to be executed from the command line
-if (!interactive()) {
-  args <- commandArgs(trailingOnly = TRUE)
-  plot_temperature_cli(args)
-}
+# # Wrapper for command-line usage
+# plot_temperature_cli <- function(args) {
+#   if (length(args) < 1) {
+#     stop("Usage: Rscript script_name.R <temp_data.csv> [output_path]")
+#   }
+#   
+#   # Read the arguments
+#   temp_data_path <- args[1]
+#   output_path <- ifelse(length(args) > 1, args[2],  gsub("\\.csv$", ".png", temp_data_path))
+#   
+#   # Check the file extension and set default if missing
+#   if (tools::file_ext(output_path) == "") {
+#     output_path <- paste0(output_path, ".png")
+#   }
+#   
+#   # Load the data
+#   temp_data <- read.csv(temp_data_path)
+#   
+#   # Ensure time is in the correct format (as.POSIXct or numeric)
+#   temp_data$time <- as.POSIXct(temp_data$time, format = "%Y-%m-%d %H:%M:%S")
+#   
+#   # Call the plot function
+#   p <- plot_temperature(temp_data)
+#   
+#   ggsave(output_path, p, width = 8, height = 6, device = "png")
+# }
+# 
+# # Allow the script to be executed from the command line
+# if (!interactive()) {
+#   args <- commandArgs(trailingOnly = TRUE)
+#   plot_temperature_cli(args)
+# }
