@@ -45,10 +45,13 @@ adjust_bbox_to_aspect_ratio <- function(bbox, aspect_ratio = 16/9){
   }
   return (bbox)
 }
+
 plot_points_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
   if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
   
   if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
+  sf_object <- st_transform(sf_object, 'EPSG:3857')
   
   bbox <- st_bbox(sf_object$geometry)
   bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
@@ -57,9 +60,12 @@ plot_points_static <- function(sf_object, color_column = "resultTime", output_fi
   
   map <- ggplot() +
     annotation_map_tile(type = "osm", zoom = 15) +
-    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +
+    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 2) +
     color_scale +
-    theme_minimal() +
+    coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
+             ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
+             expand = FALSE) +
+    theme_void() +
     theme(axis.title = element_blank(), axis.ticks = element_blank(),
           legend.position = "right", panel.grid = element_blank())
 
@@ -71,11 +77,24 @@ plot_points_static <- function(sf_object, color_column = "resultTime", output_fi
   }
 }
 
+
+
 # Plot paths
-plot_path_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
+plot_paths_static <- function(sf_object, color_column = "resultTime", group_column = 'trip_id', output_file = NULL) {
   if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
+  if (!group_column %in% colnames(sf_object)) {
+    
+    warning("Specified group column not found in the sf object using the same group for all")
+    
+    sf_object[[group_column]] <- 1
+    
+    }
+  
   
   if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
+  sf_object <- st_transform(sf_object, 'EPSG:3857')
+  
   
   bbox <- st_bbox(sf_object$geometry)
   bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
@@ -88,22 +107,69 @@ plot_path_static <- function(sf_object, color_column = "resultTime", output_file
 
 map <- ggplot() +
   annotation_map_tile(type = "osm", zoom = 15) +
-  geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 5) +
+  geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 2) +
   geom_path(
     data = sf_object, 
     aes(x = st_coordinates(geometry)[, 1], 
         y = st_coordinates(geometry)[, 2],
-        color = lead_color),  # Now uses precomputed lead()
+        color = lead_color, 
+        group = !!sym(group_column)),  # Now uses precomputed lead()
     inherit.aes = FALSE, 
     lwd = 1.5
   ) +
   color_scale +
-  theme_minimal()
+  coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
+           ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
+           expand = FALSE) +
+  theme_void() 
 
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
     message("Map saved to: ", output_file)
   } else {
     print(map)
+  }
+}
+
+
+plot_path_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
+  if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
+  
+  if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
+  sf_object <- st_transform(sf_object, 'EPSG:3857')
+  
+  
+  bbox <- st_bbox(sf_object$geometry)
+  bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
+  
+  color_scale <- get_color_scale(sf_object, color_column)
+  
+  # convert to data frame for geom_path and take the lead of the color, to color in the correct segment. 
+  sf_object <- sf_object %>%
+    mutate(lead_color = lead(!!sym(color_column)))  # Apply lead() within sf
+  
+  map <- ggplot() +
+    annotation_map_tile(type = "osm", zoom = 15) +
+    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 2) +
+    geom_path(
+      data = sf_object, 
+      aes(x = st_coordinates(geometry)[, 1], 
+          y = st_coordinates(geometry)[, 2],
+          color = lead_color),  # Now uses precomputed lead()
+      inherit.aes = FALSE, 
+      lwd = 1.5
+    ) +
+    color_scale +
+    coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
+             ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
+             expand = FALSE) +
+    theme_void()
+  
+  if (!is.null(output_file)) {
+    ggsave(output_file, map, width = 10, height = 8, dpi = 300)
+    message("Map saved to: ", output_file)
+  } else {
+    return(suppressMessages(map))
   }
 }
