@@ -14,6 +14,11 @@ apiurl_base_url = "https://platform-urbanreleaf.iccs.gr/FROST-Server/v1.1"
 # Get all Sensor names
 api_endpoint_sensors = f"{apiurl_base_url}/Sensors?$select=name&$count=true&$filter=Datastreams/Thing/name eq 'Utrecht'"
 
+# Is there a better way to do this?
+# it feels odd to have a function in the config file. 
+# I have the other endpoints here, so I'll keep it for now.
+# If we move to a yaml file, this will be a key-value pair.
+# can we somehow save this as a string encoded with placehoders for device_id?
 def api_endpoint_obs_by_sensorname(device_id):
     url = (
     f"{apiurl_base_url}/Observations?"
