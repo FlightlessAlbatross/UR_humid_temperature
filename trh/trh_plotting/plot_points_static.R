@@ -173,3 +173,40 @@ plot_path_static <- function(sf_object, color_column = "resultTime", output_file
     return(suppressMessages(map))
   }
 }
+
+
+
+
+plot_background_static <- function(sf_object, color_column = "resultTime", output_file = NULL) {
+  if (!color_column %in% colnames(sf_object)) stop("Specified color column not found in the sf object.")
+  
+  if (!"sf" %in% class(sf_object)) sf_object <- st_as_sf(sf_object)
+  
+  sf_object <- st_transform(sf_object, 'EPSG:3857')
+  
+  
+  bbox <- st_bbox(sf_object$geometry)
+  bbox_16_9 <- adjust_bbox_to_aspect_ratio(bbox, 16/9)
+  
+  # convert to data frame for geom_path and take the lead of the color, to color in the correct segment. 
+  sf_object <- sf_object %>%
+    mutate(lead_color = lead(!!sym(color_column)))
+  
+  map <- ggplot() +
+    annotation_map_tile(type = "osm", zoom = 15) +
+    geom_sf(data = sf_object, aes(color = !!sym(color_column)), size = 2) +
+    geom_path(
+      data = sf_object, 
+      aes(x = st_coordinates(geometry)[, 1], 
+          y = st_coordinates(geometry)[, 2],
+          color = lead_color),
+      inherit.aes = FALSE, 
+      lwd = 1.5
+    ) +
+    coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
+             ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
+             expand = FALSE) +
+    theme_void()
+  
+  return(map)
+}
