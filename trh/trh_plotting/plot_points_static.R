@@ -20,6 +20,8 @@ get_color_scale <- function(data, column) {
     return(scale_color_gradient(
       low = "blue", high = "red"  # Choose any two colors that fit your needs
     ))
+  } else if (is.logical(data[[column]])) {
+    return(scale_color_discrete()) 
   } else {
     stop("Color column must be either a datetime or numeric type.")
   }
