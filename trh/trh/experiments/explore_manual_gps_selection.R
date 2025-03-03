@@ -27,17 +27,22 @@ observations[ , angle_lag := shift(angle, type = 'lag') ,.(trip_id, device_id)]
 
 get_labled_points <- function() {
   
+  # using the coordinates instead of the X.iot.id is stupid, but QGIS did not copy any of the attributes, only the geometry and I didn't notice. 
+  # Very annoying. And there doesn't seem to be an easy way to do this. 
+  # there has got to be a better way to label my points in bulk by polyon
+  
   jumpy <- st_read( './data/cleaned/trh/trips/__jumpy_gps.geojson')
-  inter <- st_read( './data/cleaned/trh/trips/__intermediary.geojson')
+  # inter <- st_read( './data/cleaned/trh/trips/__intermediary.geojson')
   solid <- st_read( './data/cleaned/trh/trips/__solid_paths.geojson')
-  # dilution <- st_read( './data/cleaned/trh/trips/__.geojson')
+  # dilution <- try(st_read( './data/cleaned/trh/trips/__.geojson'), silent = T)
+  
   
   j <- observations [observations$geometry %in% jumpy$geometry,]
-  i <- observations [observations$geometry %in% inter$geometry,] # there was a hickup with the map projections
+  # i <- observations [observations$geometry %in% inter$geometry,] # there was a hickup with the map projections
   s <- observations [observations$geometry %in% solid$geometry,]
   
   j$gps <- 'jumpy'
-  i$gps <- 'intermediary'
+  # i$gps <- 'intermediary'
   s$gps <- 'line'
   
   return(rbind(j,i, s))

@@ -42,6 +42,13 @@ data <-
   # This can be improved with more manual labeling and a tree model
   mutate(gps_outlier = ifelse(opposite_angle_length < 55, 'jumpy', 'line'))
 
+
+# To find more outliers I wonder if I should approach it like the tree model. 
+# I look at the current leaf nodes and see which ones I like, and which ones I don't. 
+# then come up with a variable to split on
+# Right now I semi did split by opposite_angle_length <55
+
+
 # collapse the jumpy gps into one point
 # which one? the center, or the lsat obs?
 # or cluster them by device_id?
