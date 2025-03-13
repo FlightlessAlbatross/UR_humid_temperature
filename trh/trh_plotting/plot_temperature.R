@@ -17,9 +17,9 @@ load_reference_data <- function(start_time, end_time) {
                        all_reference_data$time <= end_time, ]
 
 
-  if (nrow(filtered_reference_data) < 3){
-    return(load_reference_data(start_time - 2*3600, end_time + 2*3600))
-  }
+  # if (nrow(filtered_reference_data) < 3){
+  #   return(load_reference_data(start_time - 1*3600, end_time + 1*3600))
+  # }
   return(filtered_reference_data)
 }
 
@@ -51,6 +51,37 @@ plot_temperature <- function(temp_data) {
   p
 
 }
+
+
+
+plot_humidity <- function(temp_data) {
+  
+  # Ensure data are in the correct format
+  if (!all(c("time", "humidity") %in% names(temp_data))) {
+    stop("temp_data must have 'time' and 'humidity' columns.")
+  }
+  
+  # Determine the time range from temp_data
+  time_min <- min(temp_data$time)
+  time_max <- max(temp_data$time)
+  
+  # Load the necessary reference data
+  reference_data <- load_reference_data(time_min, time_max)
+  
+  # Create the ggplot
+  p <- ggplot() +
+    geom_line(data = reference_data, aes(x = time, y = relative_humidity), color = "gray", alpha = 0.5, lwd = 1) +
+    geom_point(data = temp_data, aes(x = time, y = humidity), color = "blue", size = 2, shape = 1) +
+    geom_line (data = temp_data, aes(x = time, y = humidity), color = "blue") +
+    
+    labs(x = "Time",
+         y = "Relative humidity") +
+    theme_minimal()
+  
+  p
+  
+}
+
 
 # # Wrapper for command-line usage
 # plot_temperature_cli <- function(args) {

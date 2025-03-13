@@ -13,6 +13,8 @@ get_color_scale <- function(data, column) {
   if (inherits(data[[column]], "POSIXt")) {
     return(scale_color_datetime(
       labels = scales::date_format("%b-%d %H:%M"),
+      name = 'Time:',
+      breaks = range(data[[column]], na.rm = TRUE),
       low = viridis(1, option = "D"),
       high = viridis(1, option = "D", direction = -1)
     ))
@@ -123,7 +125,7 @@ map <- ggplot() +
   coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
            ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
            expand = FALSE) +
-  theme_void() 
+  theme_void() + theme(legend.position = 'bottom' )
 
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
@@ -166,7 +168,7 @@ plot_path_static <- function(sf_object, color_column = "resultTime", output_file
     coord_sf(xlim = c(bbox_16_9["xmin"], bbox_16_9["xmax"]),
              ylim = c(bbox_16_9["ymin"], bbox_16_9["ymax"]),
              expand = FALSE) +
-    theme_void()
+    theme_void()+ theme(legend.position = 'bottom' )
   
   if (!is.null(output_file)) {
     ggsave(output_file, map, width = 10, height = 8, dpi = 300)
