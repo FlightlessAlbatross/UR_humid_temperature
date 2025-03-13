@@ -45,7 +45,7 @@ get_labled_points <- function() {
   # i$gps <- 'intermediary'
   s$gps <- 'line'
   
-  return(rbind(j,i, s))
+  return(rbind(j, s))
 }
 labled <- get_labled_points()
 
@@ -75,9 +75,17 @@ library(rpart)
 library(rpart.plot)
 # Train decision tree model using only the angles 
 angle_model <- rpart(gps ~ angle + dist  + speed + gps_quality + opposite_angle_length, data = train_data, method = "class", 
-                    maxdepth = 2)
+                    maxdepth = 5)
+
+simple_angle_model <- rpart(gps ~ angle, data = train_data, method = "class", 
+                     maxdepth = 2)
+
+opp_dist_model <- rpart(gps ~ opposite_angle_length, data = train_data, method = "class", 
+                     maxdepth = 2)
 
 summary(angle_model)
+summary(simple_angle_model)
+summary(opp_dist_model)
 
 rpart.plot(angle_model, 
            type = 3,       # Boxed tree nodes
@@ -86,15 +94,38 @@ rpart.plot(angle_model,
            box.palette = "RdYlGn", # Add colors to nodes
            fallen.leaves = TRUE)  # Improve layout
 
-# Predict on test data
-predictions <- predict(angle_model, test_data, type = "class")
 
-# Compute confusion matrix
-conf_matrix <- table(Predicted = predictions, Actual = test_data$gps)
-print(conf_matrix)
-# Compute accuracy
-accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
-print(paste("Accuracy:", round(accuracy * 100, 2), "%"))
+# Predict on test data
+get_acc <- function(angle_model, test_data){
+  predictions <- predict(angle_model, test_data, type = "class")
+  
+  # Compute confusion matrix
+  conf_matrix <- table(Predicted = predictions, Actual = test_data$gps)
+  print(conf_matrix)
+  
+  # Extract values from confusion matrix
+  TP <- conf_matrix[2, 2]  # True Positives
+  TN <- conf_matrix[1, 1]  # True Negatives
+  FP <- conf_matrix[1, 2]  # False Positives
+  FN <- conf_matrix[2, 1]  # False Negatives
+  
+  # Compute accuracy
+  accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+  print(paste("Accuracy:", round(accuracy * 100, 2), "%"))
+  
+  # Compute False Positive Rate (FPR)
+  FPR <- FP / (FP + TN)
+  print(paste("False Positive Rate:", round(FPR * 100, 2), "%"))
+  
+  # Compute False Negative Rate (FNR)
+  FNR <- FN / (FN + TP)
+  print(paste("False Negative Rate:", round(FNR * 100, 2), "%"))
+}
+
+
+get_acc(angle_model, test_data )
+get_acc(simple_angle_model, test_data )
+get_acc(opp_dist_model, test_data)
 
 
 # check the false jumpies
