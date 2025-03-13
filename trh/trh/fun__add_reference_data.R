@@ -32,12 +32,13 @@ add_reference_data <- function(data, reference_data_path){
   observations <- all_reference_data[observations, roll = "nearest", on = c("time")]
   
   observations[ , temp_deviation := temp_value - temp_reference, ]
-  observations[ , humi_deviation := temp_value - humi_reference, ]
+  observations[ , humi_deviation := humi_value - humi_reference, ]
   
   names(observations)
   output <- data.frame(observations[,.(temp_X.iot.id, humi_X.iot.id, discomfort_X.iot.id, device_id,
                                           time,
                                           temp_value, humi_value, discomfort,
+                                          temp_reference, humi_reference, 
                                           temp_deviation, humi_deviation, 
                                           gps_quality, geometry)])
   

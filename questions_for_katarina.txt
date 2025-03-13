@@ -1,0 +1,1 @@
+what kind of measurement errors should I expect from the devices, both for temperature, rel_humidity and gps. 

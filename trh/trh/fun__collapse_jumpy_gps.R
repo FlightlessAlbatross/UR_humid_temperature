@@ -8,8 +8,6 @@ collapse_jumpy <- function(data){
   
   setDT(data)
   
-  # extend the gps_outlier column at the start and the end. 
-  data <- extend_outlier(data)
   
   # find jumpy points that are close to each other
   # same trip
@@ -34,13 +32,4 @@ collapse_jumpy <- function(data){
 
 
 
-extend_outlier <- function(dt){
-  
-  # Fill NA at start with next available value
-  dt[, gps_outlier_numeric := nafill(as.numeric(factor(gps_outlier, levels = c('jumpy', 'line'))), type = "locf"), trip_id]  # Fill forward
-  dt[, gps_outlier_numeric := nafill(gps_outlier_numeric, type = "nocb"), trip_id]  # Fill backward
-  dt[, gps_outlier := as.character(factor(gps_outlier_numeric, levels = c(1,2), labels = c('jumpy', 'line')))]
-  dt[ ,gps_outlier_numeric := NULL , ]
-  
-  dt
-}
+

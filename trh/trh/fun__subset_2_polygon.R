@@ -14,10 +14,10 @@ subset_to_polygon <- function(data, polygon_path) {
   
   poly <- st_read(polygon_path)
   
-  utrecht_points <- st_intersection(data, poly)
-  utrecht_points$id <- NULL
+  filtered_points <- st_intersection(data, poly)
+  filtered_points$id <- NULL
   
-  return(data)
+  return(filtered_points)
 }
 
 # dir.create(dirname(output_path), showWarnings = FALSE)

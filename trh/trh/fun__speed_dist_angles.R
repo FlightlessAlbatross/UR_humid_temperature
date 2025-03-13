@@ -56,7 +56,7 @@ speed_dist_angles <- function(data) {
     data[, dist :=   calculate_distance_lag(geometry), by = trip_id]
   }
   
-  data[, time_diff := shift(time, type = "lead") - time, by = .(device_id, trip_id)]
+  data[, time_diff := data.table::shift(time, type = "lead") - time, by = .(device_id, trip_id)]
   data[, time_diff := as.numeric(time_diff)]
   data[, speed := 3.6 *  dist / time_diff]
   
@@ -66,13 +66,13 @@ speed_dist_angles <- function(data) {
   data[, angle := angle_between_points_sf(geometry), , .(trip_id)]
   
   # calculate the walking distance on these angles
-  data[, angle_walking_length := dist + shift(dist, type = 'lag')  , .(trip_id)]
+  data[, angle_walking_length := dist + data.table::shift(dist, type = 'lag')  , .(trip_id)]
   
   #calculate air distance
   # this function on its own calculates the distance to 2 obs ahead.
   # we will want to shift it so we have the angle distance.
   data[, dist_2ahead   :=   calculate_distance_lag(geometry, lead = 2), by = trip_id]
-  data[, opposite_angle_length := shift(dist_2ahead, type = 'lag'), ]
+  data[, opposite_angle_length := data.table::shift(dist_2ahead, type = 'lag'), ]
   data[, dist_2ahead := NULL, by = trip_id]
   
   output <- data.frame(data)[, c(
