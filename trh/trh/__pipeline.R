@@ -3,6 +3,7 @@ setwd("C:/Users/hofer/Documents/urbanreleaf/UR_humid_temperature")
 library(sf)
 options(sf_quiet = TRUE) # Suppresses sf messages
 
+line_length_linter(length = 120L)
 
 data_path <- "./data/processed/trh/utrecht_global.geojson"
 output_path <- "./data/processed/trh/utrecht.geojson"
@@ -28,7 +29,7 @@ source("./trh/trh/fun__inside_poly.R")
 source("./trh/trh/fun_distance_to_closest_poly.R")
 source("./trh/trh/fun_areas_around_points.R")
 
-funky_device_ids <- c('88901ccb-88c0-435a-af7f-fb37fc890bcb')
+funky_device_ids <- c("88901ccb-88c0-435a-af7f-fb37fc890bcb")
 
 
 data <- 
@@ -41,19 +42,19 @@ data <-
   merge_temperature_and_humidity()                                      |>   # Temperature and humidity come in separate rows, this matches them together. 
   add_reference_data(reference_data_path = reference_data_path)         |> # HUMI DEVIATION IS WRONG LOOK AT humidity of humi IOD and the one after it: d16a937a-6203-11ef-ab4d-e7efe1dd766b
   add_trips(trip_lenght_seconds = 15*60) |>
-  st_transform(crs = 'EPSG:3035') |>
+  st_transform(crs = "EPSG:3035") |>
   speed_dist_angles() |>
   # After manual labeling we found, that a short opposite angle length is a great indicator for jumpy gps.
   # This can be improved with more manual labeling and a simple tree model
   # we could also (just for exploring) use a RF, and look for uncertain points and see if we want to label them uncertain or in between and feed that back to the simple tree?? is that a good idea?
-  mutate(gps_outlier = ifelse(opposite_angle_length < 55, 'jumpy', 'line')) |>
-  mutate(speed_outlier = ifelse(speed > 10, 'jumpy', 'line')) |>
+  mutate(gps_outlier = ifelse(opposite_angle_length < 55, "jumpy", "line")) |>
+  mutate(speed_outlier = ifelse(speed > 10, "jumpy", "line")) |>
   extend_jumpy_classification() |> 
   subset(!is.na(gps_outlier))
 
 
 source("./trh/trh/fun__extract_raster.R")
-data <- data|> mutate(sun_exposure_july = extract_raster_values(geometry, raster_path = './data/processed/shademap/sun_exposure_2024-07-15.tiff'))
+data <- data|> mutate(sun_exposure_july = extract_raster_values(geometry, raster_path = "./data/processed/shademap/sun_exposure_2024-07-15.tiff"))
 
 
 data <- data|>
@@ -78,7 +79,7 @@ data <- data|>
 
 
 # Distance to water gets wierdly huge??
-st_write(data, 'data/temp/qgispipe.geojson', delete_dsn = T, quiet = T)
+st_write(data, "data/temp/qgispipe.geojson", delete_dsn = TRUE, quiet = TRUE)
 
 # need to extend the outliers to the first and last obs. 
 
