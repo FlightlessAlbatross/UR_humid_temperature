@@ -3,7 +3,6 @@ setwd("C:/Users/hofer/Documents/urbanreleaf/UR_humid_temperature")
 library(sf)
 options(sf_quiet = TRUE) # Suppresses sf messages
 
-line_length_linter(length = 120L)
 
 data_path <- "./data/processed/trh/utrecht_global.geojson"
 output_path <- "./data/processed/trh/utrecht.geojson"
@@ -40,13 +39,10 @@ data <-
   clean_gps()                                                           |>   # Drop GPS outside of the range of degrees on the globe.
   subset_to_polygon(poly = utrecht_poly_path)                           |>   # subset observations down to utrecht polygon
   merge_temperature_and_humidity()                                      |>   # Temperature and humidity come in separate rows, this matches them together. 
-  add_reference_data(reference_data_path = reference_data_path)         |> # HUMI DEVIATION IS WRONG LOOK AT humidity of humi IOD and the one after it: d16a937a-6203-11ef-ab4d-e7efe1dd766b
+  add_reference_data(reference_data_path = reference_data_path)         |> 
   add_trips(trip_lenght_seconds = 15*60) |>
   st_transform(crs = "EPSG:3035") |>
   speed_dist_angles() |>
-  # After manual labeling we found, that a short opposite angle length is a great indicator for jumpy gps.
-  # This can be improved with more manual labeling and a simple tree model
-  # we could also (just for exploring) use a RF, and look for uncertain points and see if we want to label them uncertain or in between and feed that back to the simple tree?? is that a good idea?
   mutate(gps_outlier = ifelse(opposite_angle_length < 55, "jumpy", "line")) |>
   mutate(speed_outlier = ifelse(speed > 10, "jumpy", "line")) |>
   extend_jumpy_classification() |> 
@@ -55,6 +51,10 @@ data <-
 
 source("./trh/trh/fun__extract_raster.R")
 data <- data|> mutate(sun_exposure_july = extract_raster_values(geometry, raster_path = "./data/processed/shademap/sun_exposure_2024-07-15.tiff"))
+
+data <- data |> mutate(tree_canopy_10_ =
+  area_around_points_from_raster(geometry, buffer_size = 10, lookup_map_path = "./data/raw/trees/Utrecht_tree_crown_map_v_1_0.tif")
+  )
 
 
 data <- data|>
@@ -78,6 +78,7 @@ data <- data|>
 
 
 
+
 # Distance to water gets wierdly huge??
 st_write(data, "data/temp/qgispipe.geojson", delete_dsn = TRUE, quiet = TRUE)
 
@@ -93,6 +94,3 @@ st_write(data, "data/temp/qgispipe.geojson", delete_dsn = TRUE, quiet = TRUE)
 # collapse the jumpy gps into one point
 # which one? the center, or the lsat obs?
 # or cluster them by device_id?
-
-
-
