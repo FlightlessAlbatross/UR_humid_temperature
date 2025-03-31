@@ -56,6 +56,10 @@ data <- data |> mutate(tree_canopy_10_ =
   area_around_points_from_raster(geometry, buffer_size = 10, lookup_map_path = "./data/raw/trees/Utrecht_tree_crown_map_v_1_0.tif")
   )
 
+data <- data |> mutate(clc = extract_raster_values(geometry, buffer_size = 10, raster_path = "./data/raw/clc/CLMS_CLCplus_RASTER_2018_010m_eu_03035_V1_1.tif")
+)
+
+
 
 data <- data|>
   mutate(distance_grass = distance_to_grass(geometry)) |>
