@@ -6,7 +6,7 @@ library(ggplot2)
 
 # setwd("C:/Users/hofer/Documents/urbanreleaf/UR_humid_temperature/trh/trh_plotting")
 # Path to the reference data (as .rds)
-reference_data_path <- "./trh/trh_plotting/data/utrecht_reference.RDS"
+reference_data_path <- "./trh/trh_plotting/data/utrecht_reference_10m.RDS"
 
 # Define a function to load reference data selectively
 load_reference_data <- function(start_time, end_time) {

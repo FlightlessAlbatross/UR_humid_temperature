@@ -7,7 +7,7 @@ options(sf_quiet = TRUE) # Suppresses sf messages
 data_path <- "./data/processed/trh/utrecht_global.geojson"
 output_path <- "./data/processed/trh/utrecht.geojson"
 
-reference_data_path <- "./trh/trh_plotting/data/utrecht_reference.RDS"
+reference_data_path <- "./trh/trh_plotting/data/utrecht_reference_10m.RDS"
 
 
 utrecht_poly_path <- "./data/reference/LAU_utrecht_4326.geojson"
@@ -39,7 +39,7 @@ data <-
   clean_gps()                                                           |>   # Drop GPS outside of the range of degrees on the globe.
   subset_to_polygon(poly = utrecht_poly_path)                           |>   # subset observations down to utrecht polygon
   merge_temperature_and_humidity()                                      |>   # Temperature and humidity come in separate rows, this matches them together. 
-  add_reference_data(reference_data_path = reference_data_path)         |> 
+  add_reference_data(reference_data_path = reference_data_path)         |>   # TODO, make function return just the vector, not a data.frame. This extends its functionality. RN it has to be used in the right order. 
   add_trips(trip_lenght_seconds = 15*60) |>
   st_transform(crs = "EPSG:3035") |>
   speed_dist_angles() |>
