@@ -19,9 +19,19 @@ exclude_variable_residuals <- function(model, exclusion_variable_name) {
 
 # source("./trh/trh/__pipeline.R")
 library(stargazer)
+library(sf)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
 
+setwd("C:/Users/hofer/Documents/urbanreleaf/UR_humid_temperature")
+
+data <- st_read("data/temp/qgispipe.geojson")
 
 data$temp_reference <- data$temp_value + data$temp_deviation
+data$h <- hour(data$time)
+data$sun_hours <- pmin(pmax(0, hour(data$time)-6), 15)
+plot(data$sun_hours, hour(data$time))
 
 data <- data %>%
   mutate(
@@ -142,13 +152,70 @@ pairs(~ temp_value + temp_reference + residual_exclude, data = data.frame(train_
 
 
 
-# adding trip_id dummies?
+linear_model <- lm(temp_value ~ temp_reference + distance_building + distance_water + distance_grass, data = train_data)
+linear_model2 <- lm(temp_value ~ temp_reference + sun_hours + distance_building + distance_water + distance_grass, data = train_data)
+linear_model3 <- lm(temp_value ~ temp_reference + h + I(h^2) , data = train_data)
+linear_model3.1 <- lm(temp_value ~ temp_reference + h + I(h^2) + distance_building + distance_water + distance_grass, data = train_data)
+linear_model3.2 <- lm(temp_value ~ (temp_reference + h + I(h^2) + distance_building + distance_water + distance_grass)^2, data = train_data)
 
-lm_trips <- lm(temp_value ~ temp_reference   + distance_building + distance_water + distance_grass+ factor(trip_id), data = train_data)
-summary(lm_trips)
+summary(linear_model3.2)
 
-1.565e-04  * range(train_data$distance_grass)
--2.874e-04 * range(train_data$distance_building)
+stargazer(linear_model, linear_model2,linear_model3, linear_model3.1, type = 'text')
+stargazer(linear_model3, linear_model3.1, linear_model3.2, type = 'text')
 
-lm_device <- lm(temp_value ~ temp_reference + factor(device_id)  + distance_building + distance_water + distance_grass, data = train_data)
-summary(lm_device)
+
+plot(linear_model$fitted.values, linear_model$model$temp_value)
+plot(linear_model2$fitted.values, linear_model2$model$temp_value)
+plot(linear_model3$fitted.values, linear_model3$model$temp_value)
+
+
+library(effects)
+library(ggeffects)
+
+plot(allEffects(linear_model3.1))
+
+
+plot(allEffects(linear_model3.2))
+plot(predictorEffects(linear_model3.2))
+
+summary(linear_model3.2)
+plot(ggpredict(linear_model3.2, terms = c("temp_reference", "h")))
+plot(ggpredict(linear_model3.2, terms = c("h", "temp_reference")))
+plot(ggpredict(linear_model3.2, terms = c("h", "distance_grass")))
+
+plot(ggpredict(linear_model3.2, terms = c("h", "distance_water", "temp_reference")))
+plot(ggpredict(linear_model3.2, terms = c("h","distance_water", "distance_grass", "distance_building")))
+
+
+plot(ggpredict(linear_model3.1, terms = c("temp_reference", "distance_grass")))
+
+
+# try random effects model. 
+library(lme4)
+# Allow slope of temp_reference to vary by trip
+mixed_model1 <- lmer(
+  temp_value ~ temp_reference + distance_building + distance_water + distance_grass +
+    area_gras_30m + area_building_30m + area_water_30m +
+    hour(time) + I(hour(time)^2) +
+    (1 + temp_reference | trip_id),
+  data = data, REML = FALSE
+)
+
+mixed_model2 <- lmer(
+  temp_value ~ temp_reference + distance_building + distance_water + distance_grass +
+    hour(time) + I(hour(time)^2) +
+    (1 + temp_reference | trip_id),
+  data = data, REML = FALSE
+)
+BIC(mixed_model1)
+BIC(linear_model3.1)
+summary(mixed_model1)
+stargazer(mixed_model2, mixed_model1, type = 'text')
+
+# install.packages("sjPlot")
+library(sjPlot)
+# Plot fixed effects
+plot_model(mixed_model1, type = "est")  # barplot of effect sizes
+
+plot(ggpredict(mixed_model1, terms = c("distance_building")))
+
